@@ -9,7 +9,7 @@ As quatro páginas ficam em `docs/`. O projeto usa HTML, CSS e JavaScript, sem i
 - `docs/refrigerantes.html`: refrigerantes, água, sucos e energéticos.
 - `docs/complementos.html`: gelo, carvão e petiscos.
 - `docs/assets/catalog.js`: dados do catálogo, filtros, detalhes e lista local.
-- `docs/assets/styles.css`: layout responsivo e bolhas animadas.
+- `docs/assets/premium.css`: layout responsivo e bolhas animadas.
 
 O visitante pode buscar produtos, filtrar categorias, abrir detalhes, adicionar itens à lista e copiar a seleção. A lista é salva apenas no dispositivo; não há checkout ou confirmação de compra.
 
@@ -20,3 +20,9 @@ Imagens ilustrativas criadas com o gerador de imagens integrado, sem marcas come
 ## Publicação no GitHub Pages
 
 Publicação pela branch `main`, pasta `/docs`. Todos os assets e links internos usam caminhos relativos para funcionar no endereço do projeto.
+
+## Versão com fundo preto
+
+A página inicial inclui uma seleção por categoria, sugestões por ocasião, imagens editoriais e dúvidas frequentes. As páginas do catálogo mantêm filtros, busca, detalhes e lista local. O fundo preto usa bolhas de gás em CSS com movimento lento, sem biblioteca de animação, e respeita a preferência por reduzir movimento.
+
+Para atualizar o catálogo, edite `docs/assets/catalog.js` e rode `python3 tools/build_pages.py` para regenerar o HTML inicial. Todos os dados comerciais permanecem ilustrativos e sob consulta.

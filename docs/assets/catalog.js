@@ -35,6 +35,22 @@
     }
   } catch (_) {}
   let activeFilter = 'Todos';
+  let featuredMode = 'Seleção Mary';
+  const FEATURED = {
+    'Seleção Mary':['whisky','vinho','premium','guarana'],
+    'Para brindar':['pilsen','premium','whisky','gin'],
+    'Sem álcool':['cola','guarana','suco','energetico'],
+    'Complementos':['gelo','carvao','amendoim','salgadinho']
+  };
+  const PAIRINGS = {
+    pilsen:'Churrasco, petiscos e um encontro entre amigos.',premium:'Petiscos, conversa e momentos para compartilhar.',
+    whisky:'Gelo, um copo baixo e uma boa conversa.',gin:'Gelo e um toque de frutas cítricas.',vodka:'Gelo, sucos e frutas frescas.',
+    vinho:'Jantar, conversa e petiscos à mesa.',espumante:'Um brinde e uma ocasião para celebrar.',rum:'Gelo, cola e um toque de limão.',
+    cola:'Gelo, limão e a sua refeição preferida.',guarana:'Churrasco, petiscos e o almoço em família.',laranja:'Gelo e momentos para compartilhar.',
+    limao:'Gelo e uma fatia de limão.',agua:'Qualquer ocasião, com ou sem gás.',energetico:'Uma opção individual para a sua seleção.',
+    suco:'Refeições e encontros em família.','cola-menor':'Refeições e encontros menores.',gelo:'Drinks, refrigerantes e bebidas bem geladas.',
+    carvao:'O churrasco e o encontro ao redor da brasa.',amendoim:'Uma bebida e uma boa conversa.',salgadinho:'A mesa de petiscos e os seus encontros.'
+  };
   let toastTimer;
   let lastFocus = null;
   let activeDialog = null;
@@ -44,18 +60,18 @@
   const grid = document.querySelector('[data-product-grid]');
   const search = document.querySelector('[data-search]');
   const pageGroup = document.body.dataset.catalog;
-  const imagePath = (p) => `assets/products/${p.image}`;
+  const imagePath = (p) => `assets/premium-products/${p.image}`;
   const normalize = (text) => text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
   const card = (p) => `<article class="product-card">
     <button class="product-photo" type="button" data-detail="${p.id}" aria-label="Ver detalhes de ${p.name}">
       <span class="product-tag">${p.filter}</span><img src="${imagePath(p)}" alt="Imagem ilustrativa de ${p.name}" loading="lazy" decoding="async" width="480" height="480">
     </button><div class="product-details"><h3 class="product-name"><button type="button" data-detail="${p.id}">${p.name}</button></h3>
-    <p class="product-volume">${p.volume}</p><div class="product-card-bottom"><span class="product-price">Sob consulta</span>
-    <button class="add-product${selection[p.id] ? ' added' : ''}" type="button" data-add="${p.id}" aria-label="Adicionar ${p.name} à minha lista">${I(selection[p.id] ? 'check' : 'plus')}</button></div></div></article>`;
+    <p class="product-volume">${p.volume}</p><div class="product-card-bottom"><span class="product-price"><small>Valores</small>Sob consulta</span>
+    <button class="add-product${selection[p.id] ? ' added' : ''}" type="button" data-add="${p.id}" aria-label="Adicionar ${p.name} à minha lista">${I(selection[p.id] ? 'check' : 'plus')}</button></div><span class="product-quick-label">Toque na imagem para saber mais</span></div></article>`;
   function renderCatalog() {
     if (!grid) return;
     const query = normalize(search?.value || '');
-    let products = pageGroup ? PRODUCTS.filter(p => p.group === pageGroup) : ['pilsen','guarana','vinho','gelo'].map(id => PRODUCTS.find(p => p.id === id));
+    let products = pageGroup ? PRODUCTS.filter(p => p.group === pageGroup) : FEATURED[featuredMode].map(id => PRODUCTS.find(p => p.id === id));
     products = products.filter(p => (activeFilter === 'Todos' || p.filter === activeFilter) && normalize(`${p.name} ${p.filter} ${p.volume}`).includes(query));
     grid.innerHTML = products.map(card).join('');
     const count = document.querySelector('[data-results-count]');
@@ -109,7 +125,7 @@
     quickDialog.querySelector('[data-quick-content]').innerHTML=`<div class="quickview">
       <img class="quickview-image" src="${imagePath(p)}" alt="Imagem ilustrativa de ${p.name}" width="480" height="480">
       <div><p class="eyebrow">${GROUP_LABELS[p.group]}</p><h2 id="quickview-title">${p.name}</h2><p class="quickview-volume">${p.volume}</p>
-      <p class="quickview-description">${p.description}</p><p class="quickview-price">Sob consulta</p>
+      <p class="quickview-description">${p.description}</p><p class="quickview-pairing"><b>Para o seu momento</b>${PAIRINGS[p.id]}</p><p class="quickview-price">Sob consulta</p>
       <button class="button" data-add="${p.id}" type="button">${I('plus')} Adicionar à minha lista</button><p class="quickview-note">Imagem ilustrativa. Valores e disponibilidade sob consulta.</p></div></div>`;
     openDialog(quickDialog);
   }
@@ -158,6 +174,12 @@
     } else if (button.hasAttribute('data-filter')) {
       activeFilter=button.dataset.filter;
       document.querySelectorAll('[data-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));renderCatalog();
+    } else if (button.hasAttribute('data-feature-filter')) {
+      const mode=button.dataset.featureFilter;
+      if (!FEATURED[mode]) return;
+      featuredMode=mode;
+      document.querySelectorAll('[data-feature-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
+      renderCatalog();
     } else if (button.hasAttribute('data-reset-filters')) resetFilters();
     else if (button.hasAttribute('data-menu-toggle')) {
       const menu=document.querySelector('[data-mobile-menu]');menu.hidden=!menu.hidden;
@@ -180,5 +202,10 @@
   });
   search?.addEventListener('input',renderCatalog);
   window.addEventListener('storage',event=>{if(event.key===storageKey){try{const fresh=JSON.parse(event.newValue||'{}');selection={};for(const p of PRODUCTS){if(Number.isInteger(fresh?.[p.id])&&fresh[p.id]>0) selection[p.id]=Math.min(99,fresh[p.id]);}persist();}catch(_){}}});
+  const routeFilter=new URLSearchParams(window.location?.search||'').get('categoria');
+  if(routeFilter && [...document.querySelectorAll('[data-filter]')].some(b=>b.dataset.filter===routeFilter)){
+    activeFilter=routeFilter;
+    document.querySelectorAll('[data-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.filter===routeFilter)));
+  }
   renderCatalog();updateCount();
 })();
